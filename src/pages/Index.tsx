@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import TimeRegistration from '../components/TimeRegistration';
 import PaymentOverview from '../components/PaymentOverview';
-import { Button } from '../components/ui/button';
+import { TimeEntry } from '../types/TimeEntry';
 
 const Index = () => {
   const [entries, setEntries] = useState<TimeEntry[]>([]);

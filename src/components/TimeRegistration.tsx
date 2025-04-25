@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { Clock, Save } from 'lucide-react';
 import { useToast } from './ui/use-toast';
 import { Checkbox } from './ui/checkbox';
+import { TimeEntry } from '../types/TimeEntry';
 
 interface TimeRegistrationProps {
   onSave: (entry: TimeEntry) => void;

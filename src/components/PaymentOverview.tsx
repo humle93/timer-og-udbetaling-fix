@@ -1,14 +1,15 @@
 
-import { DollarSign, FilePdf } from 'lucide-react';
+import { DollarSign, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { TimeEntry } from '../types/TimeEntry';
 
 interface PaymentOverviewProps {
   entries: TimeEntry[];
 }
 
-const PaymentOverview = ({ onSave }: PaymentOverviewProps) => {
+const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
   const totalHours = entries.reduce((sum, entry) => sum + entry.hours, 0);
   const totalPayment = entries.reduce((sum, entry) => sum + entry.total, 0);
   const totalMealAllowance = entries.reduce((sum, entry) => sum + entry.mealAllowanceAmount, 0);
@@ -36,7 +37,7 @@ const PaymentOverview = ({ onSave }: PaymentOverviewProps) => {
           <h2 className="text-xl font-semibold text-gray-800">Lønsoversigt</h2>
         </div>
         <Button onClick={exportToPDF} variant="outline" size="sm">
-          <FilePdf className="h-4 w-4 mr-2" />
+          <FileText className="h-4 w-4 mr-2" />
           Eksporter PDF
         </Button>
       </div>
@@ -91,4 +92,3 @@ const PaymentOverview = ({ onSave }: PaymentOverviewProps) => {
 };
 
 export default PaymentOverview;
-
