@@ -5,4 +5,7 @@ interface TimeEntry {
   hours: number;
   rate: number;
   total: number;
+  mealAllowance: boolean;
+  mealAllowanceAmount: number;
 }
+

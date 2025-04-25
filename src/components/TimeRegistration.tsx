@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Clock, Save } from 'lucide-react';
 import { useToast } from './ui/use-toast';
+import { Checkbox } from './ui/checkbox';
 
 interface TimeRegistrationProps {
   onSave: (entry: TimeEntry) => void;
@@ -14,7 +15,21 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
   const [date, setDate] = useState('');
   const [hours, setHours] = useState('');
   const [rate, setRate] = useState('');
+  const [mealAllowance, setMealAllowance] = useState(false);
   const { toast } = useToast();
+
+  const calculateMealAllowance = (hours: number) => {
+    // 2023 satser: 539 kr. per døgn for kost
+    const fullDayRate = 539;
+    if (hours >= 24) {
+      return fullDayRate;
+    } else if (hours >= 11) {
+      return fullDayRate * 0.75; // 75% for 11+ timer
+    } else if (hours >= 5) {
+      return fullDayRate * 0.5; // 50% for 5-11 timer
+    }
+    return 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +43,18 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
       return;
     }
 
+    const hoursNum = parseFloat(hours);
+    const rateNum = parseFloat(rate);
+    const mealAllowanceAmount = mealAllowance ? calculateMealAllowance(hoursNum) : 0;
+
     const entry: TimeEntry = {
       id: Date.now(),
       date: date,
-      hours: parseFloat(hours),
-      rate: parseFloat(rate),
-      total: parseFloat(hours) * parseFloat(rate)
+      hours: hoursNum,
+      rate: rateNum,
+      total: hoursNum * rateNum,
+      mealAllowance: mealAllowance,
+      mealAllowanceAmount: mealAllowanceAmount
     };
 
     onSave(entry);
@@ -46,6 +67,7 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
     setDate('');
     setHours('');
     setRate('');
+    setMealAllowance(false);
   };
 
   return (
@@ -88,6 +110,15 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
             value={rate}
             onChange={(e) => setRate(e.target.value)}
           />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="mealAllowance" 
+            checked={mealAllowance}
+            onCheckedChange={(checked) => setMealAllowance(checked as boolean)}
+          />
+          <Label htmlFor="mealAllowance">Tilføj skattefri kostpenge</Label>
         </div>
 
         <Button type="submit" className="w-full">
