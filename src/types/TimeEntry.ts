@@ -1,7 +1,7 @@
 
 export interface TimeEntry {
   id: number;
-  date: string;
+  dates: string[]; // Changed from single date to array of dates
   hours: number;
   rate: number;
   total: number;

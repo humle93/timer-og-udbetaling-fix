@@ -17,7 +17,7 @@ interface TimeRegistrationProps {
 }
 
 const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
-  const [date, setDate] = useState<Date>();
+  const [dates, setDates] = useState<Date[]>([]);
   const [hours, setHours] = useState('');
   const [rate, setRate] = useState('');
   const [mealAllowance, setMealAllowance] = useState(false);
@@ -51,7 +51,7 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!date || !hours || !rate) {
+    if (dates.length === 0 || !hours || !rate) {
       toast({
         title: "Fejl",
         description: "Udfyld venligst alle felter",
@@ -62,13 +62,13 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
 
     const hoursNum = parseFloat(hours);
     const rateNum = parseFloat(rate);
-    const total = hoursNum * rateNum;
-    const mealAllowanceAmount = mealAllowance ? calculateMealAllowance(hoursNum) : 0;
+    const total = hoursNum * rateNum * dates.length; // Multiply by number of days
+    const mealAllowanceAmount = mealAllowance ? calculateMealAllowance(hoursNum) * dates.length : 0;
     const { taxableAmount, taxFreeAmount } = calculateTaxAmounts(total, mealAllowanceAmount);
 
     const entry: TimeEntry = {
       id: Date.now(),
-      date: format(date, 'yyyy-MM-dd'),
+      dates: dates.map(date => format(date, 'yyyy-MM-dd')),
       hours: hoursNum,
       rate: rateNum,
       total,
@@ -81,11 +81,11 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
     onSave(entry);
     toast({
       title: "Succes",
-      description: "Timer registreret",
+      description: `Timer registreret for ${dates.length} ${dates.length === 1 ? 'dag' : 'dage'}`,
     });
 
     // Reset form
-    setDate(undefined);
+    setDates([]);
     setHours('');
     setRate('');
     setMealAllowance(false);
@@ -100,25 +100,29 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="date">Dato</Label>
+          <Label htmlFor="date">Vælg datoer</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
+                  dates.length === 0 && "text-muted-foreground"
                 )}
               >
                 <Calendar className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>Vælg dato</span>}
+                {dates.length > 0 ? (
+                  `${dates.length} ${dates.length === 1 ? 'dato' : 'datoer'} valgt`
+                ) : (
+                  <span>Vælg datoer</span>
+                )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <CalendarComponent
-                mode="single"
-                selected={date}
-                onSelect={setDate}
+                mode="multiple"
+                selected={dates}
+                onSelect={setDates}
                 initialFocus
                 className="p-3 pointer-events-auto"
               />

@@ -21,8 +21,10 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
 
   const filteredEntries = entries.filter(entry => {
     if (!dateRange?.from || !dateRange?.to) return true;
-    const entryDate = new Date(entry.date);
-    return entryDate >= dateRange.from && entryDate <= dateRange.to;
+    return entry.dates.some(date => {
+      const entryDate = new Date(date);
+      return entryDate >= dateRange.from && entryDate <= dateRange.to;
+    });
   });
 
   const totalHours = filteredEntries.reduce((sum, entry) => sum + entry.hours, 0);
@@ -117,7 +119,7 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-2">Dato</th>
+                <th className="text-left py-2">Datoer</th>
                 <th className="text-right py-2">Timer</th>
                 <th className="text-right py-2">Sats</th>
                 <th className="text-right py-2">Skattepligtig</th>
@@ -128,8 +130,13 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
             <tbody>
               {filteredEntries.map((entry) => (
                 <tr key={entry.id} className="border-b">
-                  <td className="py-2">{format(new Date(entry.date), 'dd/MM/yyyy')}</td>
-                  <td className="text-right">{entry.hours}</td>
+                  <td className="py-2">
+                    {entry.dates.length === 1 
+                      ? format(new Date(entry.dates[0]), 'dd/MM/yyyy')
+                      : `${entry.dates.length} dage: ${format(new Date(entry.dates[0]), 'dd/MM')} - ${format(new Date(entry.dates[entry.dates.length-1]), 'dd/MM/yyyy')}`
+                    }
+                  </td>
+                  <td className="text-right">{entry.hours * entry.dates.length}</td>
                   <td className="text-right">{entry.rate} kr</td>
                   <td className="text-right">{entry.taxableAmount.toFixed(2)} kr</td>
                   <td className="text-right">{entry.taxFreeAmount.toFixed(2)} kr</td>
