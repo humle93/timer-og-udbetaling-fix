@@ -7,4 +7,6 @@ export interface TimeEntry {
   total: number;
   mealAllowance: boolean;
   mealAllowanceAmount: number;
+  taxableAmount: number;
+  taxFreeAmount: number;
 }
