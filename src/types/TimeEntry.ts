@@ -1,5 +1,5 @@
 
-interface TimeEntry {
+export interface TimeEntry {
   id: number;
   date: string;
   hours: number;
@@ -8,4 +8,3 @@ interface TimeEntry {
   mealAllowance: boolean;
   mealAllowanceAmount: number;
 }
-
