@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -18,10 +17,26 @@ interface TimeRegistrationProps {
 
 const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
   const [dates, setDates] = useState<Date[]>([]);
-  const [hours, setHours] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [rate, setRate] = useState('');
   const [mealAllowance, setMealAllowance] = useState(false);
   const { toast } = useToast();
+
+  const calculateHours = (start: string, end: string): number => {
+    const [startHour, startMinute] = start.split(':').map(Number);
+    const [endHour, endMinute] = end.split(':').map(Number);
+    
+    let hours = endHour - startHour;
+    let minutes = endMinute - startMinute;
+    
+    if (minutes < 0) {
+      hours -= 1;
+      minutes += 60;
+    }
+    
+    return Number((hours + minutes / 60).toFixed(2));
+  };
 
   const calculateMealAllowance = (hours: number) => {
     // 2024 satser for skattefri kostpenge
@@ -51,7 +66,7 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (dates.length === 0 || !hours || !rate) {
+    if (dates.length === 0 || !startTime || !endTime || !rate) {
       toast({
         title: "Fejl",
         description: "Udfyld venligst alle felter",
@@ -60,15 +75,17 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
       return;
     }
 
-    const hoursNum = parseFloat(hours);
+    const hoursNum = calculateHours(startTime, endTime);
     const rateNum = parseFloat(rate);
-    const total = hoursNum * rateNum * dates.length; // Multiply by number of days
+    const total = hoursNum * rateNum * dates.length;
     const mealAllowanceAmount = mealAllowance ? calculateMealAllowance(hoursNum) * dates.length : 0;
     const { taxableAmount, taxFreeAmount } = calculateTaxAmounts(total, mealAllowanceAmount);
 
     const entry: TimeEntry = {
       id: Date.now(),
       dates: dates.map(date => format(date, 'yyyy-MM-dd')),
+      startTime,
+      endTime,
       hours: hoursNum,
       rate: rateNum,
       total,
@@ -86,7 +103,8 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
 
     // Reset form
     setDates([]);
-    setHours('');
+    setStartTime('');
+    setEndTime('');
     setRate('');
     setMealAllowance(false);
   };
@@ -130,16 +148,26 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
           </Popover>
         </div>
         
-        <div>
-          <Label htmlFor="hours">Timer</Label>
-          <Input
-            id="hours"
-            type="number"
-            step="0.5"
-            placeholder="Antal timer"
-            value={hours}
-            onChange={(e) => setHours(e.target.value)}
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="startTime">Fra tidspunkt</Label>
+            <Input
+              id="startTime"
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="endTime">Til tidspunkt</Label>
+            <Input
+              id="endTime"
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
         </div>
         
         <div>

@@ -1,4 +1,3 @@
-
 import { Calendar } from 'lucide-react';
 import { Button } from './ui/button';
 import html2canvas from 'html2canvas';
@@ -120,6 +119,7 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
             <thead>
               <tr className="border-b">
                 <th className="text-left py-2">Datoer</th>
+                <th className="text-left py-2">Tidsrum</th>
                 <th className="text-right py-2">Timer</th>
                 <th className="text-right py-2">Sats</th>
                 <th className="text-right py-2">Skattepligtig</th>
@@ -136,6 +136,7 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
                       : `${entry.dates.length} dage: ${format(new Date(entry.dates[0]), 'dd/MM')} - ${format(new Date(entry.dates[entry.dates.length-1]), 'dd/MM/yyyy')}`
                     }
                   </td>
+                  <td className="text-left">{entry.startTime} - {entry.endTime}</td>
                   <td className="text-right">{entry.hours * entry.dates.length}</td>
                   <td className="text-right">{entry.rate} kr</td>
                   <td className="text-right">{entry.taxableAmount.toFixed(2)} kr</td>

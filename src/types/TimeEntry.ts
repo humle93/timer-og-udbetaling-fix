@@ -1,7 +1,9 @@
 
 export interface TimeEntry {
   id: number;
-  dates: string[]; // Changed from single date to array of dates
+  dates: string[];
+  startTime: string;  // 24-hour format HH:mm
+  endTime: string;    // 24-hour format HH:mm
   hours: number;
   rate: number;
   total: number;
