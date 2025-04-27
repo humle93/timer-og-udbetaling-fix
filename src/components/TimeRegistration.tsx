@@ -39,23 +39,23 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
   };
 
   const calculateMealAllowance = (hours: number) => {
-    // 2024 satser for skattefri kostpenge
-    const fullDayRate = 555; // DKK per døgn
+    // 2025 satser for skattefri kostpenge
+    const fullDayRate = 569; // DKK per døgn (2025-sats)
     
     if (hours >= 24) {
       return fullDayRate;
     } else if (hours >= 11) {
-      return fullDayRate * 0.75; // 75% for 11+ timer
+      return fullDayRate * 0.75; // 426,75 kr for 11+ timer
     } else if (hours >= 5) {
-      return fullDayRate * 0.5; // 50% for 5-11 timer
+      return fullDayRate * 0.5; // 284,50 kr for 5-11 timer
     }
     return 0;
   };
 
   const calculateTaxAmounts = (totalAmount: number, mealAllowanceAmount: number) => {
-    // Danish tax rules for 2024
-    const taxFreeAmount = mealAllowanceAmount; // Meal allowance is tax-free
+    // 2025 Danish tax rates for B-indkomst
     const taxableAmount = totalAmount; // Regular salary is taxable
+    const taxFreeAmount = mealAllowanceAmount; // Meal allowance remains tax-free in 2025
     
     return {
       taxFreeAmount,
@@ -189,7 +189,7 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
             onCheckedChange={(checked) => setMealAllowance(checked as boolean)}
           />
           <Label htmlFor="mealAllowance" className="text-sm">
-            Tilføj skattefri kostpenge (555 kr. pr. døgn i 2024)
+            Tilføj skattefri kostpenge (569 kr. pr. døgn i 2025)
           </Label>
         </div>
 
@@ -200,11 +200,11 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
 
       {mealAllowance && (
         <div className="mt-4 p-4 bg-sky-50 rounded-md">
-          <h3 className="font-medium mb-2">Kostpenge satser 2024:</h3>
+          <h3 className="font-medium mb-2">Kostpenge satser 2025:</h3>
           <ul className="text-sm space-y-1">
-            <li>• 5-11 timer: 277,50 kr. (50%)</li>
-            <li>• 11-24 timer: 416,25 kr. (75%)</li>
-            <li>• Over 24 timer: 555 kr. (100%)</li>
+            <li>• 5-11 timer: 284,50 kr. (50%)</li>
+            <li>• 11-24 timer: 426,75 kr. (75%)</li>
+            <li>• Over 24 timer: 569 kr. (100%)</li>
           </ul>
         </div>
       )}
