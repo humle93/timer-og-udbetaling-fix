@@ -45,14 +45,20 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
     const pdf = new jsPDF();
     
     if (selectedTemplate) {
-      const templatePdf = await fetch(selectedTemplate.templateUrl)
-        .then(response => response.arrayBuffer())
-        .then(buffer => {
-          const templatePages = pdf.loadFile(buffer);
-          return templatePages;
+      try {
+        const templateResponse = await fetch(selectedTemplate.templateUrl);
+        const templateBlob = await templateResponse.blob();
+        const templateBase64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(templateBlob);
         });
-      
-      pdf.addPage();
+        
+        await pdf.loadFile(templateBase64);
+        pdf.addPage();
+      } catch (error) {
+        console.error('Error loading template:', error);
+      }
     }
     
     const imgProps = pdf.getImageProperties(imgData);
