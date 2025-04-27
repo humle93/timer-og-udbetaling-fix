@@ -10,6 +10,8 @@ import { Calendar as CalendarComponent } from './ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Label } from './ui/label';
+import PDFTemplateSelector from './PDFTemplateSelector';
+import { PDFTemplate } from '../types/PDFTemplate';
 
 interface PaymentOverviewProps {
   entries: TimeEntry[];
@@ -17,6 +19,7 @@ interface PaymentOverviewProps {
 
 const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate | null>(null);
 
   const filteredEntries = entries.filter(entry => {
     if (!dateRange?.from || !dateRange?.to) return true;
@@ -38,7 +41,20 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
 
     const canvas = await html2canvas(element);
     const imgData = canvas.toDataURL('image/png');
+    
     const pdf = new jsPDF();
+    
+    if (selectedTemplate) {
+      const templatePdf = await fetch(selectedTemplate.templateUrl)
+        .then(response => response.arrayBuffer())
+        .then(buffer => {
+          const templatePages = pdf.loadFile(buffer);
+          return templatePages;
+        });
+      
+      pdf.addPage();
+    }
+    
     const imgProps = pdf.getImageProperties(imgData);
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
@@ -48,106 +64,115 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
   };
 
   return (
-    <div id="payment-overview" className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-sky-600" />
-          <h2 className="text-xl font-semibold text-gray-800">Lønsoversigt</h2>
+    <div className="space-y-6">
+      <div id="payment-overview" className="bg-white p-6 rounded-lg shadow-md">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-sky-600" />
+            <h2 className="text-xl font-semibold text-gray-800">Lønsoversigt</h2>
+          </div>
         </div>
-        <Button onClick={exportToPDF} variant="outline" size="sm">
-          Eksporter PDF
-        </Button>
-      </div>
 
-      <div className="mb-6">
-        <Label>Vælg periode</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !dateRange?.from && "text-muted-foreground"
-              )}
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "PPP")} - {format(dateRange.to, "PPP")}
-                  </>
+        <div className="mb-6">
+          <Label>Vælg periode</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !dateRange?.from && "text-muted-foreground"
+                )}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "PPP")} - {format(dateRange.to, "PPP")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "PPP")
+                  )
                 ) : (
-                  format(dateRange.from, "PPP")
-                )
-              ) : (
-                <span>Vælg periode</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarComponent
-              initialFocus
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={setDateRange}
-              numberOfMonths={2}
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-sky-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Timer i alt</p>
-            <p className="text-2xl font-semibold text-gray-800">{totalHours.toFixed(1)}</p>
-          </div>
-          <div className="bg-sky-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Skattepligtig løn</p>
-            <p className="text-2xl font-semibold text-gray-800">{totalTaxable.toFixed(2)} kr</p>
-          </div>
-          <div className="bg-sky-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Skattefri godtgørelse</p>
-            <p className="text-2xl font-semibold text-gray-800">{totalTaxFree.toFixed(2)} kr</p>
-          </div>
+                  <span>Vælg periode</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
-        <div className="overflow-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Datoer</th>
-                <th className="text-left py-2">Tidsrum</th>
-                <th className="text-right py-2">Timer</th>
-                <th className="text-right py-2">Sats</th>
-                <th className="text-right py-2">Skattepligtig</th>
-                <th className="text-right py-2">Skattefri</th>
-                <th className="text-right py-2">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEntries.map((entry) => (
-                <tr key={entry.id} className="border-b">
-                  <td className="py-2">
-                    {entry.dates.length === 1 
-                      ? format(new Date(entry.dates[0]), 'dd/MM/yyyy')
-                      : `${entry.dates.length} dage: ${format(new Date(entry.dates[0]), 'dd/MM')} - ${format(new Date(entry.dates[entry.dates.length-1]), 'dd/MM/yyyy')}`
-                    }
-                  </td>
-                  <td className="text-left">{entry.startTime} - {entry.endTime}</td>
-                  <td className="text-right">{entry.hours * entry.dates.length}</td>
-                  <td className="text-right">{entry.rate} kr</td>
-                  <td className="text-right">{entry.taxableAmount.toFixed(2)} kr</td>
-                  <td className="text-right">{entry.taxFreeAmount.toFixed(2)} kr</td>
-                  <td className="text-right">
-                    {(entry.taxableAmount + entry.taxFreeAmount).toFixed(2)} kr
-                  </td>
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="bg-sky-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Timer i alt</p>
+              <p className="text-2xl font-semibold text-gray-800">{totalHours.toFixed(1)}</p>
+            </div>
+            <div className="bg-sky-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Skattepligtig løn</p>
+              <p className="text-2xl font-semibold text-gray-800">{totalTaxable.toFixed(2)} kr</p>
+            </div>
+            <div className="bg-sky-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Skattefri godtgørelse</p>
+              <p className="text-2xl font-semibold text-gray-800">{totalTaxFree.toFixed(2)} kr</p>
+            </div>
+          </div>
+
+          <div className="overflow-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2">Datoer</th>
+                  <th className="text-left py-2">Tidsrum</th>
+                  <th className="text-right py-2">Timer</th>
+                  <th className="text-right py-2">Sats</th>
+                  <th className="text-right py-2">Skattepligtig</th>
+                  <th className="text-right py-2">Skattefri</th>
+                  <th className="text-right py-2">Total</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredEntries.map((entry) => (
+                  <tr key={entry.id} className="border-b">
+                    <td className="py-2">
+                      {entry.dates.length === 1 
+                        ? format(new Date(entry.dates[0]), 'dd/MM/yyyy')
+                        : `${entry.dates.length} dage: ${format(new Date(entry.dates[0]), 'dd/MM')} - ${format(new Date(entry.dates[entry.dates.length-1]), 'dd/MM/yyyy')}`
+                      }
+                    </td>
+                    <td className="text-left">{entry.startTime} - {entry.endTime}</td>
+                    <td className="text-right">{entry.hours * entry.dates.length}</td>
+                    <td className="text-right">{entry.rate} kr</td>
+                    <td className="text-right">{entry.taxableAmount.toFixed(2)} kr</td>
+                    <td className="text-right">{entry.taxFreeAmount.toFixed(2)} kr</td>
+                    <td className="text-right">
+                      {(entry.taxableAmount + entry.taxFreeAmount).toFixed(2)} kr
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">PDF Eksport</h3>
+        <PDFTemplateSelector onTemplateSelect={setSelectedTemplate} />
+        <div className="mt-4">
+          <Button onClick={exportToPDF} variant="outline" size="sm">
+            Eksporter {selectedTemplate ? `med ${selectedTemplate.name}` : 'PDF'}
+          </Button>
         </div>
       </div>
     </div>
