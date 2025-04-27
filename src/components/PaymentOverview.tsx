@@ -1,3 +1,4 @@
+
 import { Calendar } from 'lucide-react';
 import { Button } from './ui/button';
 import html2canvas from 'html2canvas';
@@ -29,7 +30,7 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
     });
   });
 
-  const totalHours = filteredEntries.reduce((sum, entry) => sum + entry.hours, 0);
+  const totalHours = filteredEntries.reduce((sum, entry) => sum + (entry.hours * entry.dates.length), 0);
   const totalPayment = filteredEntries.reduce((sum, entry) => sum + entry.total, 0);
   const totalMealAllowance = filteredEntries.reduce((sum, entry) => sum + entry.mealAllowanceAmount, 0);
   const totalTaxable = filteredEntries.reduce((sum, entry) => sum + entry.taxableAmount, 0);
