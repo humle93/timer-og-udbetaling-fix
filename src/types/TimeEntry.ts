@@ -8,6 +8,7 @@ export interface TimeEntry {
   rate: number;
   total: number;
   mealAllowance: boolean;
+  mealAllowanceType: 'with_allowance' | 'without_allowance';
   mealAllowanceAmount: number;
   taxableAmount: number;
   taxFreeAmount: number;

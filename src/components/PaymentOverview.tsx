@@ -142,6 +142,7 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
                   <th className="text-left py-2">Tidsrum</th>
                   <th className="text-right py-2">Timer</th>
                   <th className="text-right py-2">Sats</th>
+                  <th className="text-right py-2">Kostpenge</th>
                   <th className="text-right py-2">Skattepligtig</th>
                   <th className="text-right py-2">Skattefri</th>
                   <th className="text-right py-2">Total</th>
@@ -159,6 +160,9 @@ const PaymentOverview = ({ entries }: PaymentOverviewProps) => {
                     <td className="text-left">{entry.startTime} - {entry.endTime}</td>
                     <td className="text-right">{entry.hours * entry.dates.length}</td>
                     <td className="text-right">{entry.rate} kr</td>
+                    <td className="text-right">
+                      {entry.mealAllowance ? `${entry.mealAllowanceAmount.toFixed(2)} kr ${entry.mealAllowanceType === 'with_allowance' ? '(m/diæt)' : '(u/diæt)'}` : '-'}
+                    </td>
                     <td className="text-right">{entry.taxableAmount.toFixed(2)} kr</td>
                     <td className="text-right">{entry.taxFreeAmount.toFixed(2)} kr</td>
                     <td className="text-right">

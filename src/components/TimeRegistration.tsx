@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar as CalendarComponent } from './ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 interface TimeRegistrationProps {
   onSave: (entry: TimeEntry) => void;
@@ -21,6 +22,7 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
   const [endTime, setEndTime] = useState('');
   const [rate, setRate] = useState('');
   const [mealAllowance, setMealAllowance] = useState(false);
+  const [mealAllowanceType, setMealAllowanceType] = useState<'with_allowance' | 'without_allowance'>('with_allowance');
   const { toast } = useToast();
 
   const calculateHours = (start: string, end: string): number => {
@@ -39,23 +41,21 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
   };
 
   const calculateMealAllowance = (hours: number) => {
-    // 2025 satser for skattefri kostpenge
-    const fullDayRate = 569; // DKK per døgn (2025-sats)
+    const fullDayRate = mealAllowanceType === 'with_allowance' ? 569 : 96;
     
     if (hours >= 24) {
       return fullDayRate;
     } else if (hours >= 11) {
-      return fullDayRate * 0.75; // 426,75 kr for 11+ timer
+      return fullDayRate * 0.75;
     } else if (hours >= 5) {
-      return fullDayRate * 0.5; // 284,50 kr for 5-11 timer
+      return fullDayRate * 0.5;
     }
     return 0;
   };
 
   const calculateTaxAmounts = (totalAmount: number, mealAllowanceAmount: number) => {
-    // 2025 Danish tax rates for B-indkomst
-    const taxableAmount = totalAmount; // Regular salary is taxable
-    const taxFreeAmount = mealAllowanceAmount; // Meal allowance remains tax-free in 2025
+    const taxableAmount = totalAmount;
+    const taxFreeAmount = mealAllowanceAmount;
     
     return {
       taxFreeAmount,
@@ -90,6 +90,7 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
       rate: rateNum,
       total,
       mealAllowance,
+      mealAllowanceType,
       mealAllowanceAmount,
       taxableAmount,
       taxFreeAmount
@@ -101,7 +102,6 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
       description: `Timer registreret for ${dates.length} ${dates.length === 1 ? 'dag' : 'dage'}`,
     });
 
-    // Reset form
     setDates([]);
     setStartTime('');
     setEndTime('');
@@ -182,15 +182,37 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
           />
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="mealAllowance" 
-            checked={mealAllowance}
-            onCheckedChange={(checked) => setMealAllowance(checked as boolean)}
-          />
-          <Label htmlFor="mealAllowance" className="text-sm">
-            Tilføj skattefri kostpenge (569 kr. pr. døgn i 2025)
-          </Label>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="mealAllowance" 
+              checked={mealAllowance}
+              onCheckedChange={(checked) => setMealAllowance(checked as boolean)}
+            />
+            <Label htmlFor="mealAllowance" className="text-sm">
+              Tilføj skattefri kostpenge
+            </Label>
+          </div>
+
+          {mealAllowance && (
+            <div className="space-y-3">
+              <Label>Vælg kostpenge type</Label>
+              <RadioGroup 
+                value={mealAllowanceType} 
+                onValueChange={(value: 'with_allowance' | 'without_allowance') => setMealAllowanceType(value)}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="with_allowance" id="with_allowance" />
+                  <Label htmlFor="with_allowance">Med diæt (569 kr. pr. døgn)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="without_allowance" id="without_allowance" />
+                  <Label htmlFor="without_allowance">Uden diæt (96 kr. pr. døgn)</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
         </div>
 
         <Button type="submit" className="w-full">
@@ -200,11 +222,11 @@ const TimeRegistration = ({ onSave }: TimeRegistrationProps) => {
 
       {mealAllowance && (
         <div className="mt-4 p-4 bg-sky-50 rounded-md">
-          <h3 className="font-medium mb-2">Kostpenge satser 2025:</h3>
+          <h3 className="font-medium mb-2">Kostpenge satser 2025 ({mealAllowanceType === 'with_allowance' ? 'med' : 'uden'} diæt):</h3>
           <ul className="text-sm space-y-1">
-            <li>• 5-11 timer: 284,50 kr. (50%)</li>
-            <li>• 11-24 timer: 426,75 kr. (75%)</li>
-            <li>• Over 24 timer: 569 kr. (100%)</li>
+            <li>• 5-11 timer: {mealAllowanceType === 'with_allowance' ? '284,50' : '48'} kr. (50%)</li>
+            <li>• 11-24 timer: {mealAllowanceType === 'with_allowance' ? '426,75' : '72'} kr. (75%)</li>
+            <li>• Over 24 timer: {mealAllowanceType === 'with_allowance' ? '569' : '96'} kr. (100%)</li>
           </ul>
         </div>
       )}
